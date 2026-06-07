@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,system-ui);background:var(--color-background-primary,#fff);color:var(--color-text-primary,#111)}
+
+/* NAV */
+.nav{display:flex;overflow-x:auto;border-bottom:0.5px solid var(--color-border-tertiary,#e5e7eb);background:var(--color-background-primary,#fff);position:sticky;top:0;z-index:20;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{flex-shrink:0;padding:12px 14px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--color-text-secondary,#6b7280);border-bottom:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .15s}
+.nav-btn.active{color:var(--color-text-primary,#111);border-bottom-color:var(--accent,#8b5cf6)}
+.nav-btn .nav-icon{font-size:16px}
+.nav-btn .nav-label{font-size:10px;letter-spacing:.5px;font-weight:600}
+
+/* HEADER */
+.subj-header{padding:16px 16px 12px;border-bottom:0.5px solid var(--color-border-tertiary,#e5e7eb)}
+.subj-title{font-size:20px;font-weight:500;margin-bottom:2px}
+.subj-sub{font-size:11px;color:var(--color-text-secondary,#6b7280);letter-spacing:1px;margin-bottom:10px}
+.xbar{background:var(--color-border-tertiary,#e5e7eb);border-radius:100px;height:7px;overflow:hidden;margin-bottom:6px}
+.xfill{height:100%;border-radius:100px;transition:width .4s}
+.stats-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.stat-txt{font-size:12px;color:var(--color-text-secondary,#6b7280)}
+.stat-xp{font-size:12px;font-weight:600}
+.reset-btn{font-size:11px;padding:3px 10px;border-radius:100px;border:0.5px solid var(--color-border-secondary,#d1d5db);background:transparent;cursor:pointer;color:var(--color-text-secondary,#6b7280)}
+
+/* FILTERS */
+.filters{display:flex;gap:6px;padding:10px 16px;flex-wrap:wrap;border-bottom:0.5px solid var(--color-border-tertiary,#e5e7eb)}
+.f-btn{font-size:12px;padding:4px 12px;border-radius:100px;border:0.5px solid var(--color-border-secondary,#d1d5db);background:var(--color-background-primary,#fff);color:var(--color-text-secondary,#6b7280);cursor:pointer}
+.f-btn.active{background:var(--color-background-secondary,#f3f4f6);color:var(--color-text-primary,#111);border-color:var(--color-border-primary,#9ca3af);font-weight:500}
+
+/* CHAPTERS */
+.chapters{padding:10px 16px 80px}
+.section-divider{font-size:10px;font-weight:600;letter-spacing:2px;color:var(--color-text-tertiary,#9ca3af);margin:14px 0 8px;padding-bottom:5px;border-bottom:0.5px solid var(--color-border-tertiary,#e5e7eb)}
+.ch-card{background:var(--color-background-primary,#fff);border:0.5px solid var(--color-border-tertiary,#e5e7eb);border-radius:12px;overflow:hidden;margin-bottom:8px}
+.ch-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+.ch-icon{font-size:13px;color:var(--color-text-secondary,#9ca3af);transition:transform .2s;flex-shrink:0}
+.ch-card.open .ch-icon{transform:rotate(90deg)}
+.ch-title{flex:1;font-size:13px;font-weight:500;color:var(--color-text-primary,#111)}
+.ch-mini{width:44px;height:4px;background:var(--color-border-tertiary,#e5e7eb);border-radius:100px;overflow:hidden;flex-shrink:0}
+.ch-mini-f{height:100%;border-radius:100px;transition:width .3s}
+.ch-prog{font-size:11px;color:var(--color-text-secondary,#6b7280);white-space:nowrap}
+.ch-body{display:none;padding:0 14px 8px;border-top:0.5px solid var(--color-border-tertiary,#e5e7eb)}
+.ch-card.open .ch-body{display:block}
+.ch-note{font-size:11px;color:var(--color-text-tertiary,#9ca3af);font-style:italic;padding:7px 0 3px}
+.bonus-tag{font-size:10px;padding:2px 6px;border-radius:100px;background:#fef3c7;color:#92400e;font-weight:600;white-space:nowrap;flex-shrink:0}
+.quest-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary,#e5e7eb);cursor:pointer}
+.quest-row:last-child{border-bottom:none}
+.cb{width:17px;height:17px;border-radius:4px;border:0.5px solid var(--color-border-secondary,#d1d5db);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .15s}
+.cb.done{color:#fff;font-size:10px}
+.qt{font-size:12px;color:var(--color-text-primary,#111);line-height:1.5;flex:1}
+.qt.done{color:var(--color-text-secondary,#9ca3af);text-decoration:line-through}
+.qxp{font-size:10px;color:var(--color-text-tertiary,#9ca3af);white-space:nowrap;margin-top:2px}
+.done-banner{display:none;background:#f0fdf4;border-radius:6px;padding:6px 10px;margin-top:6px;font-size:11px;font-weight:500}
+.ch-card.all-done .done-banner{display:block}
+
+/* TOAST */
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:500;padding:8px 18px;border-radius:100px;pointer-events:none;white-space:nowrap;z-index:999;opacity:0;transition:opacity .2s}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav"></nav>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SUBJECTS = [
+  {
+    id:'pl', label:'Polski', icon:'✍', color:'#ec4899', storageKey:'matura_polski_v1',
+    sections:[
+      { title: null, chapters: [
+        {id:'pl1',name:'Lektury — starożytność i średniowiecze',xp:10,quests:['Biblia — Stary Testament: Księga Hioba, Psalmy, Pieśń nad Pieśniami, Apokalipsa','Homer — Iliada (fragmenty i interpretacja)','Sofokles — Antygona (treść i interpretacja: prawo ludzkie vs boskie)','Bogurodzica — treść, znaczenie i kontekst historyczny','Lament świętokrzyski — treść i kontekst','Legenda o św. Aleksym — treść i wzorzec hagiograficzny','Rozmowa Mistrza Polikarpa ze Śmiercią — treść i motyw danse macabre']},
+        {id:'pl2',name:'Lektury — renesans i barok',xp:10,quests:['Jan Kochanowski — fraszki: Ku Muzom, Na dom w Czarnolesie, O żywocie ludzkim','Jan Kochanowski — Treny V, VII, VIII — treść i analiza porównawcza','Jan Kochanowski — Odprawa posłów greckich (fragmenty i kontekst)','Piotr Skarga — Kazania sejmowe (fragmenty, retoryka, funkcja)','William Szekspir — Makbet (treść, motyw władzy i zbrodni)','Molier — Skąpiec (treść, charakterystyka bohatera)']},
+        {id:'pl3',name:'Lektury — oświecenie i romantyzm',xp:10,quests:['Ignacy Krasicki — Hymn do miłości ojczyzny + wybrane satyry i bajki','Adam Mickiewicz — Dziady cz. II (treść, obrzęd, moralitet)','Adam Mickiewicz — Dziady cz. III (treść, mesjanizm, Wielka Improwizacja)','Adam Mickiewicz — Konrad Wallenrod (treść, etyka wallenrodyzmu)','Adam Mickiewicz — Pan Tadeusz (treść, bohaterowie, epopeja)','Adam Mickiewicz — wybrane sonety krymskie','Juliusz Słowacki — Kordian (treść, porównanie z Konradem)','Juliusz Słowacki — Testament mój, Hymn','Zygmunt Krasiński — Nie-Boska komedia (treść, konflikt klasowy)','Cyprian Kamil Norwid — Fortepian Szopena, Coś ty Atenom zrobił']},
+        {id:'pl4',name:'Lektury — pozytywizm i Młoda Polska',xp:10,quests:['Bolesław Prus — Lalka (treść, bohaterowie, polska niemożność)','Bolesław Prus — Faraon (treść, władza i manipulacja)','Eliza Orzeszkowa — Gloria victis (treść i wymowa)','Henryk Sienkiewicz — wybrana powieść historyczna (Quo vadis / Potop / Krzyżacy)','Stanisław Wyspiański — Wesele (treść, symbole, mit o Polsce)','Stefan Żeromski — Rozdziobią nas kruki wrony (treść)','Stefan Żeromski — Przedwiośnie (treść, Cezary Baryka, wizje Polski)','Leopold Staff — Kowal (analiza i interpretacja)']},
+        {id:'pl5',name:'Lektury — XX wiek i współczesność',xp:10,quests:['Witold Gombrowicz — Ferdydurke (treść lub kluczowe fragmenty, motyw formy)','Bruno Schulz — Sklepy cynamonowe (wybrane opowiadania, oniryzm)','Zofia Nałkowska — Medaliony (treść, świadectwo Holokaustu)','Tadeusz Borowski — Proszę państwa do gazu (treść, behawioryzm)','Gustaw Herling-Grudziński — Inny świat (treść, Gułag)','Albert Camus — Dżuma (treść, absurd, solidarność)','Franz Kafka — Proces (treść, absurd, biurokracja)','Czesław Miłosz — Campo di Fiori, Który skrzywdziłeś','Zbigniew Herbert — Przesłanie Pana Cogito, Potęga smaku','Wisława Szymborska — Rozmowa z kamieniem, Nic dwa razy','Różewicz, Białoszewski — wybrane wiersze (forma i treść)']},
+        {id:'pl6',name:'Teoria literatury',xp:8,quests:['Epika, liryka, dramat — definicje, cechy, gatunki','Narrator — rodzaje narracji (1-osoba, 3-osoba, wszechwiedzący)','Środki stylistyczne: metafora, metonimia, synekdocha','Środki stylistyczne: epitet, porównanie, apostrofa','Środki stylistyczne: anafora, antyteza, oksymoron, hiperbola','Środki stylistyczne: ironia, alegoria, symbol','Gatunki liryczne: sonet, elegia, oda, hymn, ballada','Gatunki epiki: powieść, nowela, opowiadanie, parabola','Wersyfikacja: wiersz sylabiczny, rymy (parzyste, krzyżowe, okalające)','Toposy: vanitas, theatrum mundi, arkadia, danse macabre, exegi monumentum']},
+        {id:'pl7',name:'Epoki literackie',xp:8,quests:['Antyk — mimesis, katharsis, tragizm, cechy','Średniowiecze — teocentryzm, danse macabre, hagiografia','Renesans — humanizm, antropocentryzm, reformacja','Barok — kontrreformacja, konceptyzm, vanitas','Oświecenie — racjonalizm, klasycyzm, sentymentalizm','Romantyzm — irracjonalizm, bunt, ludowość, mesjanizm','Pozytywizm — praca organiczna, praca u podstaw, utylitaryzm','Młoda Polska — dekadentyzm, impresjonizm, symbolizm','XX-lecie — awangarda, katastrofizm, futuryzm','Literatura powojenna — rozliczenie z wojną, emigracja']},
+        {id:'pl8',name:'Czytanie ze zrozumieniem',xp:8,quests:['Odczytywanie sensu dosłownego i przenośnego tekstu','Wskazywanie tezy i argumentów w tekście','Identyfikowanie środków językowych i ich funkcji','Streszczanie tekstu — wyodrębnianie kluczowych informacji','Notatka syntetyzująca — zasady i struktura','Rozróżnianie faktu od opinii w tekście publicystycznym','Interpretacja tekstu poetyckiego — podstawowe kroki analizy']},
+        {id:'pl9',name:'Rozprawka',xp:10,quests:['Struktura: teza → argumenty → kontrargument → podsumowanie','Formułowanie tezy — ćwiczenie na różnych tematach','Dobieranie argumentów literackich do tezy','Budowanie akapitu: argument → przykład → wniosek','Spójniki logiczne: ponadto, jednak, co więcej, w konsekwencji','Pisanie wstępu — 3 różne techniki','Pisanie zakończenia — powrót do tezy','Napisanie pełnej rozprawki (min. 250 słów w 90 min)','Korekta pod kątem błędów i logiki wywodu']},
+        {id:'pl10',name:'Interpretacja wiersza',xp:10,quests:['Schemat: podmiot liryczny, sytuacja, adresat','Opis nastroju i tonu wiersza','Wskazywanie i interpretowanie środków stylistycznych','Odczytywanie sensów dosłownych i metaforycznych','Kontekst literacki — nawiązania do epoki','Spójny wywód analityczny — budowanie interpretacji','Napisanie pełnej interpretacji (250 słów w 70 min)']},
+        {id:'pl11',name:'Gramatyka i ortografia',xp:6,quests:['Części mowy — rozpoznawanie i odmiana','Składnia: podmiot, orzeczenie, dopełnienie, okolicznik, przydawka','Zdania złożone współrzędnie i podrzędnie','Zasady pisowni rz/ż, u/ó, ch/h','Zasady użycia przecinka','Dwukropek, myślnik, średnik — zastosowanie','Błędy językowe — rozpoznawanie i korekta']},
+      ]}
+    ]
+  },
+  {
+    id:'en', label:'Angielski', icon:'🌐', color:'#10b981', storageKey:'matura_english_v1',
+    sections:[
+      { title: null, chapters: [
+        {id:'en1',name:'Czasy teraźniejsze',xp:8,quests:['Present Simple — budowa, użycie, przysłówki (always, usually, never)','Present Continuous — budowa, użycie (now, at the moment)','Present Simple vs Present Continuous — różnice i wybór','Present Perfect — budowa: have/has + V3','Present Perfect — użycie: doświadczenia, rezultaty (just/already/yet)','Present Perfect Continuous — budowa i użycie (for, since, how long)','Present Perfect vs Past Simple — kiedy którego użyć']},
+        {id:'en2',name:'Czasy przeszłe',xp:8,quests:['Past Simple — czasowniki regularne i nieregularne','Past Simple — pytania i przeczenia z did','Past Continuous — budowa i użycie (when, while)','Past Simple vs Past Continuous — różnice','Past Perfect — budowa: had + V3 i użycie','Czasowniki nieregularne — 50 najważniejszych form na pamięć','Used to — przyzwyczajenia w przeszłości']},
+        {id:'en3',name:'Czasy przyszłe',xp:6,quests:['Future Simple (will) — spontaniczne decyzje i przewidywania','Be going to — plany, zamiary, przewidywania','Present Continuous jako przyszłość — zaplanowane spotkania','Present Simple jako przyszłość — rozkłady jazdy','Will vs going to — ćwiczenie wyboru']},
+        {id:'en4',name:'Strona bierna (Passive Voice)',xp:8,quests:['Passive Voice — budowa: be + past participle','Present Simple Passive: is/are + V3','Past Simple Passive: was/were + V3','Present Perfect Passive: has/have been + V3','Future Simple Passive: will be + V3','Present Continuous Passive: is/are being + V3','Zamiana zdania aktywnego na bierne — ćwiczenia','By + agent — kiedy używać i kiedy pomijać']},
+        {id:'en5',name:'Mowa zależna (Reported Speech)',xp:8,quests:['Zasada cofania czasu (backshift) — tabela zmian','Present Simple → Past Simple','Present Continuous → Past Continuous','Past Simple → Past Perfect','Will → Would, Can → Could, May → Might','Say vs tell — różnica i użycie','Reported questions — pytania w mowie zależnej','Reported commands — rozkazy z told + to']},
+        {id:'en6',name:'Okresy warunkowe (Conditionals)',xp:8,quests:['Zero Conditional — prawa ogólne','First Conditional — realne warunki przyszłe','Second Conditional — sytuacje hipotetyczne','Second Conditional — użycie "were" dla wszystkich osób','Third Conditional — nierealne sytuacje w przeszłości','Mixed Conditionals — łączenie II i III okresu','Unless, provided that, as long as — alternatywne spójniki']},
+        {id:'en7',name:'Czasowniki modalne',xp:7,quests:['Can / Could — zdolność, możliwość, prośba','May / Might — możliwość i pozwolenie','Must / Have to — obowiązek — różnica','Mustn\'t vs Don\'t have to — zakaz vs brak konieczności','Should / Ought to — rada i powinność','Would — prośby, zwyczaje w przeszłości','Modalne + have + V3: must have, could have, should have']},
+        {id:'en8',name:'Bezokolicznik i gerund',xp:6,quests:['Gerund po: enjoy, avoid, finish, mind, suggest, consider','Bezokolicznik po: want, decide, plan, hope, promise, manage','Obie formy bez zmiany znaczenia: like, love, hate, start','Obie formy ze zmianą znaczenia: remember, stop, try, forget','Gerund jako podmiot zdania','Preposition + gerund: interested in, good at, afraid of']},
+        {id:'en9',name:'Gramatyka — pozostałe',xp:7,quests:['Rzeczowniki policzalne i niepoliczalne — some/any, much/many','Przedimki a/an, the — zasady użycia','Przymiotniki — stopniowanie regularne i nieregularne','Przysłówki — budowa, stopniowanie, miejsce w zdaniu','Zaimki: osobowe, dzierżawcze, wskazujące, zwrotne','Pytania rozłączne (question tags)','Zdania przydawkowe: who, which, that, whose, where','Przyimki czasu: at, on, in','Przyimki miejsca i kierunku']},
+        {id:'en10',name:'Słownictwo tematyczne',xp:6,quests:['Człowiek — wygląd, charakter, emocje, relacje (50 słów)','Dom i życie codzienne (50 słów)','Szkoła i edukacja (40 słów)','Praca i zawody (40 słów)','Zdrowie — choroby, lekarz, leki (40 słów)','Sport i rekreacja (30 słów)','Podróże i turystyka (40 słów)','Jedzenie i restauracja (30 słów)','Kultura i rozrywka (30 słów)','Środowisko i ekologia (30 słów)','Technologia i media (30 słów)']},
+        {id:'en11',name:'Rozumienie ze słuchu',xp:7,quests:['Słuchanie monologów — notatki z kluczowych informacji','Słuchanie dialogów — cel i relacja rozmówców','Dopasowywanie wypowiedzi do sytuacji','Uzupełnianie luk na podstawie nagrania','True/False/Not Stated — metoda eliminacji','Przesłuchaj 3 nagrania z arkuszy CKE z poprzednich lat']},
+        {id:'en12',name:'Rozumienie tekstu',xp:7,quests:['True/False/Not Stated — szukanie key words','Pytania wielokrotnego wyboru do tekstu','Dopasowywanie nagłówków do akapitów','Uzupełnianie luk słowami z ramki','Domyślanie się znaczenia słowa z kontekstu','Przećwicz 5 arkuszy CKE z czytaniem']},
+        {id:'en13',name:'Wypowiedź pisemna',xp:10,quests:['Email formalny — struktura i zwroty','Email nieformalny — różnice stylistyczne','Napisanie emaila formalnego (120–150 słów)','Napisanie emaila nieformalnego (120–150 słów)','Wpis na blog / artykuł — struktura','Spójniki: however, moreover, therefore, as a result','Napisanie wypracowania na czas (120 słów w 30 min)','Korekta: czasy, interpunkcja, ortografia']},
+        {id:'en14',name:'Środki językowe',xp:7,quests:['Słowotwórstwo: prefiksy (un-, dis-, mis-, re-, over-)','Słowotwórstwo: sufiksy (-tion, -ness, -ful, -less, -ment)','Parafrazowanie zdań — transformacje','Uzupełnianie luk jednym słowem','Kolokacje: make/do/have/take + rzeczownik (30 połączeń)','Phrasal verbs — 30 najważniejszych (give up, look after, find out)']},
+      ]}
+    ]
+  },
+  {
+    id:'mp', label:'Mat. P', icon:'∑', color:'#f59e0b', storageKey:'matura_matpodst_v1',
+    sections:[
+      { title:'ETAP 1 — PODSTAWÓWKA', chapters:[
+        {id:'sp1',name:'Liczby i ułamki',xp:5,quests:['Dodawanie i odejmowanie ułamków zwykłych','Mnożenie i dzielenie ułamków zwykłych','Zamiana ułamka zwykłego na dziesiętny (w tym okresowy)','Zamiana ułamka dziesiętnego na zwykły','Zaokrąglanie rozwinięć dziesiętnych','Obliczenia na liczbach ujemnych','Odległość między liczbami na osi liczbowej','Notacja wykładnicza — zapis a·10ᵏ','Zamiana jednostek prędkości i gęstości']},
+        {id:'sp2',name:'Potęgi i pierwiastki',xp:5,quests:['Potęgi o wykładnikach naturalnych','Potęgi o wykładnikach całkowitych ujemnych','Iloczyn i iloraz potęg o tej samej podstawie','Potęga potęgi — upraszczanie','Porównywanie potęg','Pierwiastki II stopnia — obliczanie i upraszczanie','Pierwiastki III stopnia','Wyłączanie czynnika przed znak pierwiastka','Mnożenie i dzielenie pierwiastków']},
+        {id:'sp3',name:'Procenty',xp:5,quests:['Obliczanie procentu z liczby','Obliczanie liczby z jej procentu','Przedstawianie części jako procent całości','Ceny po podwyżce / obniżce','Obliczenia z VAT','Odsetki dla lokaty rocznej']},
+        {id:'sp4',name:'Wyrażenia algebraiczne (SP)',xp:5,quests:['Obliczanie wartości liczbowej wyrażenia','Redukcja wyrazów podobnych','Dodawanie i odejmowanie sum algebraicznych','Mnożenie jednomianu przez sumę','Mnożenie sum algebraicznych','Wyłączanie wspólnego czynnika','Wyznaczanie wielkości ze wzoru geometrycznego','Wyznaczanie wielkości ze wzoru fizycznego']},
+        {id:'sp5',name:'Równania i układy (SP)',xp:5,quests:['Równania liniowe z jedną niewiadomą','Zadanie tekstowe → równanie','Układy równań — metoda podstawiania','Układy równań — metoda przeciwnych współczynników','Zadania tekstowe na układy','Wielkości wprost proporcjonalne','Wielkości odwrotnie proporcjonalne']},
+        {id:'sp6',name:'Figury płaskie (SP)',xp:5,quests:['Pola i obwody trójkątów','Pola i obwody czworokątów','Twierdzenie Pitagorasa','Kąty w figurach płaskich','Długość okręgu i łuku','Pole koła, pierścienia i wycinka','Kąty środkowe','Cechy przystawania trójkątów','Trójkąty podobne — stosunek pól','Twierdzenie Talesa','Symetria osiowa i środkowa','Wielokąty foremne']},
+        {id:'sp7',name:'Bryły (SP)',xp:5,quests:['Pole i objętość graniastosłupa','Pole i objętość ostrosłupa','Pole i objętość walca','Pole i objętość stożka','Pole i objętość kuli','Zamiana jednostek objętości']},
+        {id:'sp8',name:'Statystyka (SP)',xp:5,quests:['Odczytywanie danych z tabeli','Odczytywanie danych z diagramu','Obliczanie średniej arytmetycznej','Obliczanie mediany','Rzut monetą i kostką — prawdopodobieństwo','Losowanie — proste zdarzenia']},
+      ]},
+      { title:'ETAP 2 — LICEUM PODSTAWOWE', chapters:[
+        {id:'lo1',name:'Liczby rzeczywiste',xp:10,quests:['Prawa działań na pierwiastkach dowolnego stopnia','Potęgi o wykładnikach wymiernych','Logarytmy — definicja i związek z potęgowaniem','log(a·b), log(a/b), log(aⁿ) — wzory','Wartość bezwzględna — interpretacja','Równania z wartością bezwzględną |x+a|=b','Nierówności z wartością bezwzględną','Przedziały liczbowe — zapis i oś','Procenty składane — lokaty wieloletnie']},
+        {id:'lo2',name:'Wyrażenia algebraiczne (LO)',xp:10,quests:['Wzór: (a+b)²','Wzór: (a-b)²','Wzór: a²-b² (różnica kwadratów)','Dodawanie i odejmowanie wielomianów','Mnożenie wielomianów','Wyłączanie czynnika — złożone przykłady','Mnożenie wyrażeń wymiernych','Dzielenie wyrażeń wymiernych']},
+        {id:'lo3',name:'Równania i nierówności (LO)',xp:10,quests:['Równania liniowe — sprzeczne i tożsamościowe','Nierówności liniowe — zapis na osi','Równania kwadratowe — delta','Wzory na pierwiastki','Przypadki delta<0, delta=0, delta>0','Nierówności kwadratowe — metoda ramkowania','Równania wielomianowe w postaci iloczynowej']},
+        {id:'lo4',name:'Funkcje',xp:10,quests:['Definicja funkcji — tabela, wzór, wykres','Dziedzina i zbiór wartości z wykresu','Miejsca zerowe z wykresu','Monotoniczność z wykresu','Funkcja liniowa — wzór i współczynnik','Wyznaczanie wzoru funkcji liniowej','Równoległość i prostopadłość prostych','Funkcja kwadratowa — postać ogólna','Postać kanoniczna (wierzchołek)','Postać iloczynowa','Szkicowanie paraboli','Oś symetrii i wierzchołek','Max/min funkcji kwadratowej w przedziale','Funkcja f(x)=a/x — wykres','Funkcja wykładnicza — właściwości','Funkcja logarytmiczna — właściwości','Przesunięcie wykresu: f(x)+b','Przesunięcie wykresu: f(x-a)']},
+        {id:'lo5',name:'Ciągi',xp:10,quests:['Ciąg określony wzorem ogólnym','Ciąg rekurencyjny','Rozpoznawanie ciągu arytmetycznego','n-ty wyraz: aₙ=a₁+(n-1)r','Suma n wyrazów arytmetycznego','Rozpoznawanie ciągu geometrycznego','n-ty wyraz: aₙ=a₁·qⁿ⁻¹','Suma n wyrazów geometrycznego','Zadania na lokaty i oprocentowanie']},
+        {id:'lo6',name:'Trygonometria',xp:10,quests:['Sin, cos, tg dla kątów ostrych','Rozszerzenie na kąty 0°–180°','Wartości dla 30° — na pamięć','Wartości dla 45° — na pamięć','Wartości dla 60° — na pamięć','Wzór: sin²α+cos²α=1','Wzór: tgα=sinα/cosα','Twierdzenie cosinusów','Pole trójkąta: P=½·a·b·sinγ','Rozwiązywanie trójkątów prostokątnych']},
+        {id:'lo7',name:'Planimetria (LO)',xp:10,quests:['Twierdzenie Pitagorasa i odwrotne','Rozpoznawanie trójkątów z boków','Kąty wpisane i środkowe w okręgu','Pole wycinka i długość łuku','Twierdzenie Talesa — złożone','Cechy podobieństwa trójkątów','Własności prostokąta, rombu, trapezu','Okrąg opisany — promień','Okrąg wpisany — promień']},
+        {id:'lo8',name:'Geometria analityczna',xp:10,quests:['Odległość między punktami','Środek odcinka','Równanie prostej y=ax+b z dwóch punktów','Warunek równoległości prostych','Warunek prostopadłości prostych','Odległość punktu od prostej','Równanie okręgu (x-a)²+(y-b)²=r²','Wzajemne położenie prostej i okręgu']},
+        {id:'lo9',name:'Stereometria',xp:10,quests:['Graniastosłupy — złożone zadania','Ostrosłupy — złożone zadania','Walec — złożone zadania','Stożek — złożone zadania','Kula — złożone zadania','Twierdzenie Pitagorasa w przestrzeni','Kąt między krawędzią a płaszczyzną','Przekroje brył']},
+        {id:'lo10',name:'Statystyka i kombinatoryka',xp:10,quests:['Interpretacja danych statystycznych','Średnia, mediana, dominanta','Prawdopodobieństwo klasyczne P(A)=m/n','Zdarzenie przeciwne P(Ā)=1-P(A)','Suma i iloczyn zdarzeń','Reguła mnożenia','Reguła dodawania','Permutacje n!','Kombinacje C(n,k)']},
+        {id:'lo11',name:'Rachunek różniczkowy (PP)',xp:10,quests:['Pochodna — interpretacja geometryczna','Pochodna funkcji stałej i liniowej','Pochodna xⁿ — wzór','Pochodna √x','Pochodna sumy i różnicy','Pochodna funkcji × stała','Przedziały monotoniczności ze znaku f\'','Ekstremum lokalne — warunek f\'(x₀)=0','Minimum vs maksimum — zmiana znaku','Zadanie optymalizacyjne']},
+      ]}
+    ]
+  },
+  {
+    id:'mr', label:'Mat. R', icon:'∂', color:'#8b5cf6', storageKey:'matura_mat_roz_v1',
+    sections:[
+      { title: null, chapters: [
+        {id:'mr1',name:'Liczby rzeczywiste — rozszerzenie',xp:10,quests:['Wartość bezwzględna — interpretacja geometryczna','Równanie |x-a|=b — rozwiązywanie','Nierówność |x-a|<b — przedział','Nierówność |x-a|≥b — suma przedziałów','Zamiana podstawy logarytmu: log_a(b)=log_c(b)/log_c(a)','Zastosowanie wzoru zamiany podstawy','Złożone obliczenia logarytmiczne']},
+        {id:'mr2',name:'Wielomiany i wyrażenia algebraiczne',xp:12,quests:['Wzór: (a+b)³','Wzór: (a-b)³','Wzór: a³+b³=(a+b)(a²-ab+b²)','Wzór: a³-b³=(a-b)(a²+ab+b²)','Dzielenie wielomianu przez dwumian — schemat Hornera','Twierdzenie o reszcie: W(a)=reszta z W(x)÷(x-a)','Twierdzenie o pierwiastkach (x-a) jako czynnik','Twierdzenie o pierwiastkach wymiernych','Rozkład wielomianu na czynniki','Dodawanie, odejmowanie, mnożenie wielomianów wyższych stopni','Dziedzina wyrażenia wymiernego — mianownik≠0','Dodawanie i odejmowanie wyrażeń wymiernych','Mnożenie i dzielenie wyrażeń wymiernych','Skracanie wyrażeń wymiernych']},
+        {id:'mr3',name:'Równania i nierówności — rozszerzenie',xp:15,quests:['Wzory Viète\'a: x₁+x₂=-b/a, x₁·x₂=c/a','Zastosowanie Viète\'a — wyrażenia symetryczne','Równanie liniowe z parametrem — dyskusja','Równanie kwadratowe z parametrem — liczba pierwiastków','Nierówność kwadratowa z parametrem','Układ równań prowadzący do kwadratowego','Równania wielomianowe — podstawienie','Równania wielomianowe — twierdzenie o pierwiastkach','Nierówności wielomianowe — metoda ramkowania na czynniki','Nierówność wymierna: (x+1)/(x+3)>2','Nierówność wymierna ze złożonymi mianownikami','Równanie z wartością bezwzględną: ||x+1|-2|=3','Nierówność: |x+3|+|x-5|>12','Nierówności z dwiema wartościami bezwzględnymi — przedziały']},
+        {id:'mr4',name:'Funkcje — rozszerzenie',xp:12,quests:['Wykres y=|f(x)| — odbicie wartości ujemnych','Wykres y=c·f(x) — skalowanie pionowe','Wykres y=f(cx) — skalowanie poziome','Kombinacje transformacji — kolejność operacji','Funkcja logarytmiczna dla różnych podstaw','Własności funkcji logarytmicznej z wykresu','Funkcja złożona z różnych wzorów w przedziałach','Odczytywanie własności funkcji złożonej','Zastosowanie logarytmu: pH, dB, skala Richtera']},
+        {id:'mr5',name:'Ciągi — rozszerzenie',xp:10,quests:['Ciąg rekurencyjny — wyznaczanie wzoru ogólnego','Granica 1/n gdy n→∞','Granica 1/n² i podobnych','Działania na granicach: suma, różnica, iloczyn, iloraz','Obliczanie granic przez wyłączanie największej potęgi','Szereg geometryczny zbieżny: |q|<1','Suma szeregu zbieżnego: S=a₁/(1-q)','Ułamek okresowy jako szereg geometryczny']},
+        {id:'mr6',name:'Trygonometria — rozszerzenie',xp:15,quests:['Miara łukowa — definicja i zamiana na stopnie','Zamiana stopni na miarę łukową','Wartości funkcji trig. dla π/6, π/4, π/3','Sprowadzanie kąta >90° w radianach','Okresowość sin i cos — okres 2π, tg — okres π','Nierówność sin(x)>a — odczyt z wykresu i rozwiązanie','Wzór sin(α+β)','Wzór sin(α-β)','Wzór cos(α+β)','Wzór cos(α-β)','Wzory na sin2α i cos2α','Wzór na sumę sinusów','Równanie: sin(2x)=1/2 — pełne rozwiązanie','Równanie: sin(x)+cos(x)=1','Nierówność: cos(2x)<1/2']},
+        {id:'mr7',name:'Planimetria — rozszerzenie',xp:10,quests:['Czworokąty wpisane w okrąg — suma kątów','Czworokąty opisane na okręgu — sumy boków','Twierdzenie Talesa — obliczanie odcinków','Twierdzenie odwrotne Talesa — równoległość','Jednokładność — środek, skala, obrazy figur','Figury podobne i jednokładne — własności','Twierdzenie sinusów: a/sinα=b/sinβ=2R','Twierdzenie cosinusów — złożone zadania','Złożone zadania łączące oba twierdzenia']},
+        {id:'mr8',name:'Geometria analityczna — rozszerzenie',xp:12,quests:['Równanie ogólne prostej: Ax+By+C=0','Równoległość prostych z równań ogólnych','Prostopadłość prostych z równań ogólnych','Prosta równoległa przez punkt','Prosta prostopadła przez punkt','Odległość punktu od prostej: d=|Ax₀+By₀+C|/√(A²+B²)','Koło jako nierówność (x-a)²+(y-b)²≤r²','Graficzna interpretacja układu nierówności','Wektor — definicja, współrzędne, długość','Dodawanie i odejmowanie wektorów','Mnożenie wektora przez liczbę','Wektory do opisu przesunięcia wykresu']},
+        {id:'mr9',name:'Stereometria — rozszerzenie',xp:8,quests:['Przekrój sfery płaszczyzną — promień','Przekrój graniastosłupa — figura przekroju','Przekrój ostrosłupa — figura przekroju','Złożone zadania na objętości i pola','Kąt między płaszczyznami','Odległość punktu od płaszczyzny']},
+        {id:'mr10',name:'Kombinatoryka zaawansowana',xp:12,quests:['Permutacje: P(n)=n!','Permutacje z powtórzeniami','Wariacje bez powtórzeń: V(n,k)=n!/(n-k)!','Wariacje z powtórzeniami: V\'(n,k)=nᵏ','Kombinacje: C(n,k)=n!/(k!·(n-k)!)','Złożone zadania z warunkami','Prawdopodobieństwo warunkowe: P(A|B)=P(A∩B)/P(B)','Twierdzenie o prawdopodobieństwie całkowitym','Twierdzenie Bayesa — podstawowe zastosowanie','Schematy Bernoulliego']},
+        {id:'mr11',name:'Rachunek różniczkowy — rozszerzenie',xp:15,quests:['Granica funkcji — obliczanie prostych granic','Granica jednostronna — lewa i prawa','Granica w nieskończoności — wyłączanie','Ciągłość funkcji — punkty nieciągłości','Pochodna z definicji — iloraz różnicowy','Geometryczna interpretacja — styczna','Fizyczna interpretacja — prędkość chwilowa','Pochodna funkcji stałej i liniowej','Pochodna xⁿ, √x, 1/x','Pochodna sin x, cos x, eˣ, ln x','Pochodna sumy i różnicy','Pochodna iloczynu: (f·g)\'=f\'g+fg\'','Pochodna ilorazu: (f/g)\'=(f\'g-fg\')/g²','Reguła łańcuchowa: (f(g(x)))\'=f\'(g(x))·g\'(x)','Pochodna wielomianu — złożone przykłady','Pochodna funkcji wymiernej','Przedziały monotoniczności: f\'(x)>0 lub <0','Ekstrema — warunek konieczny f\'(x₀)=0','Warunek dostateczny — zmiana znaku','Ekstrema wielomianów — pełna analiza','Ekstrema funkcji wymiernych','Zadania optymalizacyjne — budowanie funkcji celu','Równanie stycznej: y-f(x₀)=f\'(x₀)(x-x₀)']},
+        {id:'mr12',name:'Matematyka dyskretna — bonus IT',xp:10,bonus:true,quests:['Dwójkowy system liczbowy — zamiana dziesiętny↔binarny','Szesnastkowy system liczbowy — zamiana','Działania na liczbach binarnych','Operacje logiczne: AND, OR, NOT, XOR — tabele prawdy','Algebra Boole\'a — upraszczanie wyrażeń','Indukcja matematyczna — dowodzenie wzorów','Algorytm Euklidesa — NWD','Arytmetyka modulo — kongruencje','Liczby pierwsze — sito Eratostenesa','Podstawy teorii grafów']},
+      ]}
+    ]
+  },
+  {
+    id:'fiz', label:'Fizyka', icon:'⚛', color:'#3b82f6', storageKey:'matura_fizyka_v1',
+    sections:[
+      { title: null, chapters: [
+        {id:'fiz1',name:'Kinematyka',xp:10,quests:['Droga, przemieszczenie, prędkość, przyspieszenie — definicje','Ruch jednostajny: s=v·t, wykresy s(t) i v(t)','Ruch jednostajnie przyspieszony — 4 wzory kinematyczne','Swobodny spadek — obliczenia czasu i wysokości','Rzut poziomy — niezależność składowych','Ruch po okręgu — prędkość liniowa, kątowa, okres, f','Przyspieszenie dośrodkowe: a=v²/r=ω²r','Składanie i rozkładanie wektorów']},
+        {id:'fiz2',name:'Dynamika Newtona',xp:10,quests:['I zasada dynamiki — bezwładność, układ inercjalny','II zasada: F=m·a','III zasada — siły parami','Siła tarcia — statyczne i kinetyczne, współczynnik','Ruch na równi pochyłej — rozkład sił','Warunek równowagi — suma sił=0','Masa a ciężar — różnica']},
+        {id:'fiz3',name:'Mechanika bryły sztywnej',xp:8,quests:['Moment siły: M=F·d, jednostka N·m','Warunek równowagi — suma momentów=0','Środek ciężkości — wyznaczanie','Moment bezwładności — definicja i przykłady','II zasada dla obrotu: M=I·ε','Zasada zachowania momentu pędu','Energia kinetyczna obrotu: Eₖ=½·I·ω²']},
+        {id:'fiz4',name:'Energia mechaniczna',xp:10,quests:['Praca: W=F·s·cosα','Energia kinetyczna: Eₖ=½mv²','Energia potencjalna grawitacyjna: Ep=mgh','Energia potencjalna sprężystości: Ep=½kx²','Zasada zachowania energii mechanicznej','Moc: P=W/t=F·v','Sprawność: η=W_uż/W_dost','Zderzenia — sprężyste i niesprężyste','Pęd: p=m·v, zasada zachowania']},
+        {id:'fiz5',name:'Grawitacja',xp:8,quests:['Prawo powszechnego ciążenia: F=G·m₁m₂/r²','Natężenie pola: g=GM/r²','I i II prędkość kosmiczna','Ruch satelitów — prędkość i okres','Prawa Keplera I, II i III','Energia satelity na orbicie']},
+        {id:'fiz6',name:'Termodynamika',xp:10,quests:['Temperatura — Celsjusz i Kelvin, przeliczanie','Ciepło właściwe: Q=m·c·ΔT','Ciepło topnienia i parowania — bilanse','Gaz doskonały — założenia modelu','Równanie stanu: pV=nRT','Przemiana izotermiczna: p₁V₁=p₂V₂','Przemiana izobaryczna: V₁/T₁=V₂/T₂','Przemiana izochoryczna: p₁/T₁=p₂/T₂','I zasada termodynamiki: ΔU=Q-W','II zasada — entropia, kierunek procesów','Silnik cieplny — sprawność']},
+        {id:'fiz7',name:'Fale mechaniczne',xp:8,quests:['Ruch harmoniczny — A, T, f, faza','Równanie: x=A·cos(ωt)','Energia w ruchu harmonicznym','Wahadło matematyczne: T=2π√(l/g)','Fale mechaniczne — podłużne i poprzeczne','v=λ·f — prędkość, długość, częstotliwość','Interferencja i dyfrakcja fal','Efekt Dopplera','Fale stojące — węzły i strzałki']},
+        {id:'fiz8',name:'Pole elektryczne',xp:10,quests:['Prawo Coulomba: F=k·q₁q₂/r²','Natężenie pola: E=F/q=k·Q/r²','Linie pola — rysunek','Potencjał: φ=k·Q/r, napięcie U=φ₁-φ₂','Praca: W=q·U','Pojemność kondensatora: C=Q/U','Energia kondensatora: E=½·C·U²','Pole jednorodne: E=U/d']},
+        {id:'fiz9',name:'Prąd stały',xp:10,quests:['Natężenie prądu: I=q/t','Prawo Ohma: U=I·R','Opór: R=ρ·l/A','Opory szeregowe: R=R₁+R₂','Opory równoległe: 1/R=1/R₁+1/R₂','Prawa Kirchhoffa — węzeł i oczko','Moc prądu: P=U·I=I²·R','Energia: W=P·t','SEM i opór wewnętrzny: U=ε-I·r']},
+        {id:'fiz10',name:'Magnetyzm i indukcja',xp:10,quests:['Indukcja magnetyczna B, jednostka tesla','Siła Lorentza: F=q·v·B·sinα','Siła na przewodnik: F=B·I·l·sinα','Ruch ładunku w polu B — okrąg','Prawo Faradaya — indukcja elektromagnetyczna','SEM indukcji: ε=-ΔΦ/Δt','Reguła Lenza — kierunek prądu','Budowa prądnicy','Transformator: U₁/U₂=n₁/n₂','Prąd przemienny — wartości skuteczne']},
+        {id:'fiz11',name:'Fale elektromagnetyczne i optyka',xp:8,quests:['Widmo fal EM — od radiowych do gamma','c=3·10⁸ m/s — prędkość światła','Prawo odbicia — zwierciadła','Prawo Snella: n₁sinα=n₂sinβ','Całkowite wewnętrzne odbicie','Soczewki — równanie: 1/f=1/do+1/di','Interferencja i dyfrakcja światła','Polaryzacja światła']},
+        {id:'fiz12',name:'Fizyka atomowa i kwantowa',xp:10,quests:['Model Bohra — poziomy energetyczne','Widma emisyjne i absorpcyjne','Foton: E=h·f=h·c/λ, stała Plancka','Efekt fotoelektryczny: h·f>W','Fala de Broglie: λ=h/p','Promieniotwórczość — α, β, γ','Prawo rozpadu: N=N₀·(1/2)^(t/T)','Okres połowicznego zaniku','Reakcje jądrowe — rozszczepienie i synteza','Zasady zachowania w reakcjach jądrowych']},
+        {id:'fiz13',name:'Wzory i stałe — do zapamiętania',xp:5,quests:['Stałe: g, G, c, h — wartości na pamięć','4 wzory kinematyczne — na pamięć','Wzory energii — Eₖ, Ep, praca, moc','Wzory elektryczne — Ohm, moc, energia','Wzory optyczne — Snell, soczewka','Wzory kwantowe — foton, de Broglie','Rozwiąż 10 zadań ze wzorów bez pomocy']},
+        {id:'fiz14',name:'Analiza doświadczeń',xp:8,quests:['Odczytywanie i interpretacja wykresów','Wyznaczanie wielkości z wykresu','Planowanie doświadczenia — schemat i przyrządy','Błąd bezwzględny i względny','Analiza tabeli danych — wnioski','Opisywanie obserwacji słownie i matematycznie']},
+      ]}
+    ]
+  }
+];
+
+// Load all states
+const states = {};
+SUBJECTS.forEach(s => {
+  try { states[s.id] = JSON.parse(localStorage.getItem(s.storageKey)) || {}; }
+  catch { states[s.id] = {}; }
+});
+function saveState(sid) {
+  const subj = SUBJECTS.find(s=>s.id===sid);
+  try { localStorage.setItem(subj.storageKey, JSON.stringify(states[sid])); } catch {}
+}
+
+let currentSubj = 'pl';
+let currentFilter = 'all';
+const openChapters = {};
+
+function isDone(sid, chId, qi) { return !!((states[sid][chId]||{})[qi]); }
+function toggleQuest(sid, chId, qi) {
+  if(!states[sid][chId]) states[sid][chId]={};
+  states[sid][chId][qi] = !states[sid][chId][qi];
+  saveState(sid);
+  renderContent();
+  showToast();
+}
+function toggleChapter(chId) {
+  openChapters[chId] = !openChapters[chId];
+  renderContent();
+}
+
+const toastMsgs = ['Quest ukończony!','Dobra robota!','Odhaczone!','Idziesz do przodu!','XP zdobyte!'];
+let toastTimer;
+function showToast() {
+  const t = document.getElementById('toast');
+  t.textContent = toastMsgs[Math.floor(Math.random()*toastMsgs.length)];
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function subjStats(sid) {
+  let done=0,total=0,xpDone=0,xpAll=0;
+  const subj = SUBJECTS.find(s=>s.id===sid);
+  subj.sections.forEach(sec=>sec.chapters.forEach(ch=>{
+    ch.quests.forEach((_,i)=>{
+      total++; xpAll+=ch.xp;
+      if(isDone(sid,ch.id,i)){done++;xpDone+=ch.xp;}
+    });
+  }));
+  return {done,total,xpDone,xpAll};
+}
+
+function renderNav() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = SUBJECTS.map(s=>{
+    const {done,total} = subjStats(s.id);
+    const pct = total?Math.round(done/total*100):0;
+    return `<button class="nav-btn${currentSubj===s.id?' active':''}" onclick="switchSubj('${s.id}')" style="--accent:${s.color}">
+      <span class="nav-icon">${s.icon}</span>
+      <span class="nav-label">${s.label}</span>
+      <span style="font-size:10px;color:${currentSubj===s.id?s.color:'var(--color-text-tertiary,#9ca3af)'}">${pct}%</span>
+    </button>`;
+  }).join('');
+}
+
+function renderContent() {
+  const subj = SUBJECTS.find(s=>s.id===currentSubj);
+  const {done,total,xpDone,xpAll} = subjStats(currentSubj);
+  const pct = xpAll?Math.round(xpDone/xpAll*100):0;
+  const c = subj.color;
+
+  let html = `
+    <div class="subj-header">
+      <div class="subj-title" style="color:${c}">${subj.icon} ${subj.label === 'Mat. P' ? 'Matematyka Podstawowa' : subj.label === 'Mat. R' ? 'Matematyka Rozszerzona' : subj.label}</div>
+      <div class="subj-sub">MATURA 2027 — FORMUŁA 2015</div>
+      <div class="xbar"><div class="xfill" style="width:${pct}%;background:${c}"></div></div>
+      <div class="stats-row">
+        <span class="stat-txt">${done}/${total} questów</span>
+        <span class="stat-xp" style="color:${c}">${xpDone}/${xpAll} XP</span>
+        <button class="reset-btn" onclick="resetSubj('${subj.id}')">Resetuj</button>
+      </div>
+    </div>
+    <div class="filters">
+      ${[['all','Wszystkie'],['todo','Do zrobienia'],['done','Ukończone']].map(([v,l])=>
+        `<button class="f-btn${currentFilter===v?' active':''}" onclick="setFilter('${v}')">${l}</button>`
+      ).join('')}
+    </div>
+    <div class="chapters">`;
+
+  subj.sections.forEach(sec=>{
+    if(sec.title) html += `<div class="section-divider">${sec.title}</div>`;
+    sec.chapters.forEach(ch=>{
+      const chDone = ch.quests.filter((_,i)=>isDone(subj.id,ch.id,i)).length;
+      const chAll = ch.quests.length;
+      const allDone = chDone===chAll;
+      if(currentFilter==='done' && !allDone) return;
+      if(currentFilter==='todo' && allDone) return;
+      const isOpen = !!openChapters[ch.id];
+      const miniPct = Math.round(chDone/chAll*100);
+      html += `<div class="ch-card${isOpen?' open':''}${allDone?' all-done':''}">
+        <div class="ch-head" onclick="toggleChapter('${ch.id}')">
+          <span class="ch-icon">▶</span>
+          <span class="ch-title">${ch.name}</span>
+          ${ch.bonus?'<span class="bonus-tag">BONUS IT</span>':''}
+          <div class="ch-mini"><div class="ch-mini-f" style="width:${miniPct}%;background:${c}"></div></div>
+          <span class="ch-prog">${chDone}/${chAll}</span>
+        </div>`;
+      if(isOpen){
+        html += `<div class="ch-body">`;
+        if(ch.note) html += `<div class="ch-note">💬 ${ch.note}</div>`;
+        ch.quests.forEach((q,i)=>{
+          const d = isDone(subj.id,ch.id,i);
+          html += `<div class="quest-row" onclick="toggleQuest('${subj.id}','${ch.id}',${i})">
+            <div class="cb${d?' done':''}" style="${d?'background:'+c+';border-color:'+c:''}">${d?'✓':''}</div>
+            <div class="qt${d?' done':''}">${q}</div>
+            <div class="qxp">+${ch.xp} XP</div>
+          </div>`;
+        });
+        html += `<div class="done-banner" style="color:${c}">🏆 Dział ukończony!</div></div>`;
+      }
+      html += `</div>`;
+    });
+  });
+
+  html += `</div>`;
+  document.getElementById('app').innerHTML = html;
+  renderNav();
+}
+
+function switchSubj(sid) { currentSubj=sid; currentFilter='all'; renderContent(); }
+function setFilter(f) { currentFilter=f; renderContent(); }
+function resetSubj(sid) {
+  if(confirm('Zresetować postęp z tego przedmiotu?')){ states[sid]={}; saveState(sid); renderContent(); }
+}
+
+renderNav();
+renderContent();
+</script>
+</body>
+</html>
